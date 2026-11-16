@@ -365,6 +365,16 @@ img.icon { display: block; flex: none; }
   border-bottom: 1px solid var(--line);
 }
 .choice:last-child { border-bottom: 0; }
+.choice.flat { border-bottom: 0; }
+.zone-list { display: flex; flex-direction: column; gap: 8px; padding: 0 12px 12px; }
+.zone-card {
+  border: 1px solid #e4e2ec;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 .choice-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
 .tag {
   display: inline-flex;

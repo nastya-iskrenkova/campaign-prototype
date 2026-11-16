@@ -33,7 +33,8 @@ import {
 type Screen = "fork" | "search" | "category" | "settings" | "bids" | "budget" | "done";
 type SheetKind = "categories" | "rates" | "topup" | "help" | null;
 type PayModel = "cpc" | "cpm";
-type RateTarget = "search" | "cpm";
+type CpmBidMode = "unified" | "manual";
+type RateTarget = "search" | "cpm" | "cpmSearch";
 
 const PASSWORD = import.meta.env.VITE_PASSWORD ?? "";
 const UNLOCK_KEY = "campaign-unlocked";
@@ -48,11 +49,14 @@ const initial = {
   name: "Кампания Игрушка Мандалорец Малыш",
   nameEdited: false,
   model: "cpc" as PayModel,
+  cpmBidMode: "unified" as CpmBidMode,
   zoneSearch: true,
   zoneReco: true,
   searchBid: 10,
   recoBid: 10,
   cpmBid: 150,
+  cpmSearchBid: 190,
+  cpmRecoBid: 190,
   cpmFocused: false,
   budget: 2000,
   budgetEdited: false,
@@ -96,7 +100,8 @@ export default function App() {
   const promoUsed = state.promo ? Math.min(state.promoAmount, promoMax) : 0;
   const accountCharge = Math.max(state.budget - promoUsed, 0);
   const promoReady = !state.promo || state.promoAmount <= promoMax;
-  const zonesReady = state.zoneSearch || state.zoneReco;
+  const zonesReady =
+    state.model === "cpm" && state.cpmBidMode === "unified" ? true : state.zoneSearch || state.zoneReco;
   const canLeaveSettings = state.name.trim().length > 0 && zonesReady;
   const selectedVisible = visibleProducts.some((product) => product.id === state.selectedId);
 
@@ -354,20 +359,83 @@ export default function App() {
               </div>
               <div className="card">
                 <div className="section-title" style={{ paddingTop: 16 }}>Зоны показов</div>
-                <div className="choice">
-                  <span className="choice-copy">
-                    <span className="choice-title">Поиск</span>
-                    <span className="choice-text">Продвижение по запросам покупателя — они влияют на выдачу в поиске и в каталоге</span>
-                  </span>
-                  <Toggle checked={state.zoneSearch} label="Поиск" onChange={(zoneSearch) => patch({ zoneSearch })} />
-                </div>
-                <div className="choice">
-                  <span className="choice-copy">
-                    <span className="choice-title">Рекомендации</span>
-                    <span className="choice-text">Продвижение в подборках товаров, похожих на недавние запросы или открытые карточки</span>
-                  </span>
-                  <Toggle checked={state.zoneReco} label="Рекомендации" onChange={(zoneReco) => patch({ zoneReco })} />
-                </div>
+                {state.model === "cpc" ? (
+                  <>
+                    <div className="choice">
+                      <span className="choice-copy">
+                        <span className="choice-title">Поиск</span>
+                        <span className="choice-text">Продвижение по запросам покупателя — они влияют на выдачу в поиске и в каталоге</span>
+                      </span>
+                      <Toggle checked={state.zoneSearch} label="Поиск" onChange={(zoneSearch) => patch({ zoneSearch })} />
+                    </div>
+                    <div className="choice">
+                      <span className="choice-copy">
+                        <span className="choice-title">Рекомендации</span>
+                        <span className="choice-text">Продвижение в подборках товаров, похожих на недавние запросы или открытые карточки</span>
+                      </span>
+                      <Toggle checked={state.zoneReco} label="Рекомендации" onChange={(zoneReco) => patch({ zoneReco })} />
+                    </div>
+                  </>
+                ) : (
+                  <div role="radiogroup" aria-label="Ставка для зон показов">
+                    <div
+                      className="choice selectable"
+                      role="radio"
+                      aria-checked={state.cpmBidMode === "unified"}
+                      tabIndex={0}
+                      onClick={() => patch({ cpmBidMode: "unified" })}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          patch({ cpmBidMode: "unified" });
+                        }
+                      }}
+                    >
+                      <span className="choice-copy">
+                        <span className="choice-title">Единая ставка</span>
+                        <span className="choice-text">Продвижение сразу в поиске и рекомендациях, мин. ставка от 155 ₽ в зависимости от категории</span>
+                      </span>
+                      <Radio checked={state.cpmBidMode === "unified"} />
+                    </div>
+                    <div
+                      className="choice selectable flat"
+                      role="radio"
+                      aria-checked={state.cpmBidMode === "manual"}
+                      tabIndex={0}
+                      onClick={() => patch({ cpmBidMode: "manual" })}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          patch({ cpmBidMode: "manual" });
+                        }
+                      }}
+                    >
+                      <span className="choice-copy">
+                        <span className="choice-title">Ручная ставка</span>
+                        <span className="choice-text">Выбирайте зоны показов и ставку для них, мин. ставка от 190 ₽ в зависимости от категории</span>
+                      </span>
+                      <Radio checked={state.cpmBidMode === "manual"} />
+                    </div>
+                    {state.cpmBidMode === "manual" && (
+                      <div className="zone-list">
+                        <div className="zone-card">
+                          <span className="choice-copy">
+                            <span className="choice-title">Поиск</span>
+                            <span className="choice-text">Когда запустите кампанию, сможете управлять поисковыми фразами, по которым продвигается товар</span>
+                          </span>
+                          <Toggle checked={state.zoneSearch} label="Поиск" onChange={(zoneSearch) => patch({ zoneSearch })} />
+                        </div>
+                        <div className="zone-card">
+                          <span className="choice-copy">
+                            <span className="choice-title">Рекомендации</span>
+                            <span className="choice-text">Действует дисконтирование — ставка на продвижение будет ниже, чем укажете в настройках</span>
+                          </span>
+                          <Toggle checked={state.zoneReco} label="Рекомендации" onChange={(zoneReco) => patch({ zoneReco })} />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
                 {!zonesReady && <p className="hint error" style={{ padding: "0 12px 12px" }}>Включите хотя бы одну зону показов</p>}
               </div>
             </>
@@ -411,7 +479,7 @@ export default function App() {
                     onHelp={() => openHelp("recoBid")}
                   />
                 )}
-                {state.model === "cpm" && (
+                {state.model === "cpm" && state.cpmBidMode === "unified" && (
                   <BidField
                     label="Единая ставка (CPM)"
                     value={state.cpmBid}
@@ -432,6 +500,28 @@ export default function App() {
                         : undefined
                     }
                     onChip={(cpmBid) => patch({ cpmBid })}
+                  />
+                )}
+                {state.model === "cpm" && state.cpmBidMode === "manual" && state.zoneSearch && (
+                  <BidField
+                    label="Ставка в поиске (CPM)"
+                    value={state.cpmSearchBid}
+                    onChange={(cpmSearchBid) => patch({ cpmSearchBid })}
+                    onHelp={() => openHelp("cpm")}
+                    onChart={() => {
+                      setRateTarget("cpmSearch");
+                      setSheet("rates");
+                    }}
+                    note="Минимум 190 ₽"
+                  />
+                )}
+                {state.model === "cpm" && state.cpmBidMode === "manual" && state.zoneReco && (
+                  <BidField
+                    label="Ставка в рекомендациях (CPM)"
+                    value={state.cpmRecoBid}
+                    onChange={(cpmRecoBid) => patch({ cpmRecoBid })}
+                    onHelp={() => openHelp("cpm")}
+                    note="Минимум 190 ₽, с учётом дисконтирования"
                   />
                 )}
               </div>
@@ -632,7 +722,13 @@ export default function App() {
                 type="button"
                 className="preset"
                 onClick={() => {
-                  patch(rateTarget === "search" ? { searchBid: preset.value } : { cpmBid: preset.value });
+                  patch(
+                    rateTarget === "search"
+                      ? { searchBid: preset.value }
+                      : rateTarget === "cpmSearch"
+                        ? { cpmSearchBid: preset.value }
+                        : { cpmBid: preset.value },
+                  );
                   setSheet(null);
                 }}
               >
