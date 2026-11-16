@@ -31,7 +31,7 @@ import {
 } from "./ui";
 import { HomeScreen, listedCampaigns, placementLabel, type ListedCampaign } from "./home";
 
-type Screen = "home" | "fork" | "search" | "category" | "settings" | "bids" | "budget" | "done";
+type Screen = "home" | "fork" | "search" | "category" | "settings" | "bids" | "budget";
 type SheetKind = "categories" | "rates" | "topup" | "help" | null;
 type PayModel = "cpc" | "cpm";
 type CpmBidMode = "unified" | "manual";
@@ -131,26 +131,25 @@ export default function App() {
     });
   }
 
-  function reset() {
-    setState(initial);
-    setSheet(null);
-  }
-
   function launch() {
+    const created = {
+      name: state.name.trim() || "Новая кампания",
+      pay: state.model === "cpc" ? "CPC" : "CPM",
+      placement: placementLabel(state),
+      balance: state.budget,
+      autoTopup: state.topupOn,
+    } as const;
     setCampaigns((current) => [
       {
         key: `created-${current.length}`,
         id: String(124324300 + current.length),
-        name: state.name.trim() || "Новая кампания",
-        pay: state.model === "cpc" ? "CPC" : "CPM",
-        placement: placementLabel(state),
         items: 1,
-        balance: state.budget,
-        autoTopup: state.topupOn,
+        ...created,
       },
       ...current,
     ]);
-    patch({ screen: "done" });
+    setState(initial);
+    setSheet(null);
   }
 
   const title =
@@ -167,7 +166,6 @@ export default function App() {
     } else if (state.screen === "settings") patch({ screen: state.cameFrom });
     else if (state.screen === "bids") patch({ screen: "settings" });
     else if (state.screen === "budget") patch({ screen: "bids" });
-    else if (state.screen === "done") patch({ screen: "budget" });
   }
 
   if (!unlocked) {
@@ -682,20 +680,6 @@ export default function App() {
             </>
           )}
 
-          {state.screen === "done" && selected && (
-            <section className="empty">
-              <span className="badge"><Icon name="check" alt="" /></span>
-              <div className="empty-copy">
-                <h2>Кампания запущена</h2>
-                <p>{state.name}</p>
-              </div>
-              <div className="success-list">
-                <div><span>Товар</span><b>{selected.name}</b></div>
-                <div><span>Оплата</span><b>{state.model === "cpc" ? "За клики (CPC)" : "За показы (CPM)"}</b></div>
-                <div><span>Бюджет</span><b>{formatMoney(state.budget)}</b></div>
-              </div>
-            </section>
-          )}
         </div>
 
         {!sheet && state.screen === "fork" && <div className="dock" style={{ padding: 0 }}><HomeIndicator /></div>}
@@ -711,7 +695,6 @@ export default function App() {
         {!sheet && state.screen === "budget" && (
           <PrimaryButton disabled={!budgetValid || !promoReady} onClick={launch}>Запустить кампанию</PrimaryButton>
         )}
-        {!sheet && state.screen === "done" && <PrimaryButton onClick={reset}>Создать ещё</PrimaryButton>}
         </>
         )}
 
