@@ -2,14 +2,19 @@ import { useMemo, useState, type FormEvent } from "react";
 import {
   categories,
   defaultCampaignName,
+  daysLeftLabel,
+  formatBonus,
   formatMoney,
   helpCopy,
   matchesQuery,
   products,
+  promoCap,
+  promoPackages,
   ratePresets,
   searchPosition,
   type HelpId,
   type Product,
+  type PromoPackageId,
 } from "./data";
 import {
   HelpButton,
@@ -54,6 +59,9 @@ const initial = {
   limitOn: false,
   limit: 500,
   promo: false,
+  promoPackageId: "week" as PromoPackageId,
+  promoAmount: 999,
+  promoEdited: false,
   topupMin: 500,
   topupAmount: 1000,
   topupOn: false,
@@ -83,6 +91,11 @@ export default function App() {
   );
 
   const budgetValid = state.budget >= 1000;
+  const promoPackage = promoPackages.find((item) => item.id === state.promoPackageId) ?? promoPackages[0];
+  const promoMax = promoCap(promoPackage.amount, promoPackage.percent, state.budget);
+  const promoUsed = state.promo ? Math.min(state.promoAmount, promoMax) : 0;
+  const accountCharge = Math.max(state.budget - promoUsed, 0);
+  const promoReady = !state.promo || state.promoAmount <= promoMax;
   const zonesReady = state.zoneSearch || state.zoneReco;
   const canLeaveSettings = state.name.trim().length > 0 && zonesReady;
   const selectedVisible = visibleProducts.some((product) => product.id === state.selectedId);
@@ -475,18 +488,75 @@ export default function App() {
                 <div className="source">
                   <span className="setting-copy">
                     <span className="setting-title">Единый счёт: 10 000 ₽</span>
-                    <span className="sub">Спишем {state.promo ? formatMoney(Math.max(state.budget - 250, 0)) : "250 ₽"}</span>
+                    <span className="sub">Спишем {formatMoney(accountCharge)}</span>
                   </span>
                   <Icon name="wallet" alt="" />
                 </div>
                 <div className="hairline" />
                 <div className="source">
-                  <span className="setting-copy">
-                    <span className="setting-title">Промобонусы: 1 000 B</span>
-                    {state.promo && <span className="sub">Спишем 250 B</span>}
-                  </span>
-                  <Toggle checked={state.promo} label="Списывать промобонусы" onChange={(promo) => patch({ promo })} />
+                  <span className="setting-title">Промобонусы: {formatBonus(promoPackage.amount)}</span>
+                  <Toggle
+                    checked={state.promo}
+                    label="Списывать промобонусы"
+                    onChange={(promo) =>
+                      patch({
+                        promo,
+                        promoAmount: promoCap(promoPackage.amount, promoPackage.percent, state.budget),
+                        promoEdited: false,
+                      })
+                    }
+                  />
                 </div>
+                {state.promo && (
+                  <>
+                    <div className="promo-packages" role="radiogroup" aria-label="Пакет промобонусов">
+                      {promoPackages.map((item) => {
+                        const selectedPackage = item.id === promoPackage.id;
+                        return (
+                          <div
+                            key={item.id}
+                            className={`promo-package${selectedPackage ? " selected" : ""}`}
+                            role="radio"
+                            aria-checked={selectedPackage}
+                            tabIndex={0}
+                            onClick={() =>
+                              patch({
+                                promoPackageId: item.id,
+                                promoAmount: promoCap(item.amount, item.percent, state.budget),
+                                promoEdited: false,
+                              })
+                            }
+                            onKeyDown={(event) => {
+                              if (event.key !== "Enter" && event.key !== " ") return;
+                              event.preventDefault();
+                              patch({
+                                promoPackageId: item.id,
+                                promoAmount: promoCap(item.amount, item.percent, state.budget),
+                                promoEdited: false,
+                              });
+                            }}
+                          >
+                            <b>{formatBonus(item.amount)}</b>
+                            <span className="tag">
+                              до {item.percent}%
+                              <span onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()}>
+                                <HelpButton label={`Подсказка: пакет до ${item.percent}%`} onClick={() => openHelp("promo")} />
+                              </span>
+                            </span>
+                            <span className="sub">{daysLeftLabel(item.days)}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="pad promo-amount">
+                      <BonusField
+                        value={state.promoAmount}
+                        max={promoMax}
+                        onChange={(promoAmount) => patch({ promoAmount, promoEdited: true })}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             </>
           )}
@@ -518,7 +588,7 @@ export default function App() {
           <PrimaryButton onClick={() => patch({ screen: "budget" })}>Продолжить</PrimaryButton>
         )}
         {!sheet && state.screen === "budget" && (
-          <PrimaryButton disabled={!budgetValid} onClick={() => patch({ screen: "done" })}>Запустить кампанию</PrimaryButton>
+          <PrimaryButton disabled={!budgetValid || !promoReady} onClick={() => patch({ screen: "done" })}>Запустить кампанию</PrimaryButton>
         )}
         {!sheet && state.screen === "done" && <PrimaryButton onClick={reset}>Создать ещё</PrimaryButton>}
 
@@ -602,6 +672,28 @@ export default function App() {
         )}
       </div>
     </div>
+  );
+}
+
+function BonusField({ value, max, onChange }: { value: number; max: number; onChange: (value: number) => void }) {
+  const [focused, setFocused] = useState(false);
+  const over = value > max;
+  const shown = focused ? (value ? String(value) : "") : formatBonus(value);
+  return (
+    <label className="field">
+      <span className="field-label">Сколько промобонусы из пакета использовать</span>
+      <span className={`field-box${over ? " error" : ""}`}>
+        <input
+          inputMode="numeric"
+          aria-label="Сколько промобонусы из пакета использовать"
+          value={shown}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          onChange={(event) => onChange(Number(event.target.value.replace(/\D/g, "")) || 0)}
+        />
+      </span>
+      <span className={`hint${over ? " error" : ""}`}>До {formatBonus(max)} (1 B = 1 ₽)</span>
+    </label>
   );
 }
 

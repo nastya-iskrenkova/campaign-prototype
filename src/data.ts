@@ -47,6 +47,32 @@ export function formatMoney(value: number) {
   return `${new Intl.NumberFormat("ru-RU").format(value)} ₽`;
 }
 
+export function formatBonus(value: number) {
+  return `${new Intl.NumberFormat("ru-RU").format(value)} B`;
+}
+
+export const promoPackages = [
+  { id: "week", amount: 1000, percent: 99, days: 3 },
+  { id: "stock", amount: 1_250_000, percent: 5, days: 10 },
+] as const;
+
+export type PromoPackageId = (typeof promoPackages)[number]["id"];
+
+export function promoCap(amount: number, percent: number, budget: number) {
+  const share = Math.floor((budget * percent) / 100);
+  const limited = Math.min(amount, share);
+  if (percent < 100 && limited === amount && amount > 0) return amount - 1;
+  return Math.max(0, limited);
+}
+
+export function daysLeftLabel(days: number) {
+  const mod10 = days % 10;
+  const mod100 = days % 100;
+  const word =
+    mod10 === 1 && mod100 !== 11 ? "день" : mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14) ? "дня" : "дней";
+  return `Доступно ещё ${days} ${word}`;
+}
+
 export function defaultCampaignName(product: Product) {
   if (product.id === "toy-1") return "Кампания Игрушка Мандалорец Малыш";
   return `Кампания ${product.name.split(" ").slice(0, 3).join(" ")}`;
@@ -95,6 +121,10 @@ export const helpCopy = {
   balance: {
     title: "Доступно",
     body: "Откуда списывается бюджет. Сначала можно использовать промобонусы, остальное — с единого счёта.",
+  },
+  promo: {
+    title: "Лимит пакета",
+    body: "Из пакета можно оплатить не больше указанной доли бюджета. 1 B = 1 ₽, остаток списывается с единого счёта.",
   },
 } as const;
 

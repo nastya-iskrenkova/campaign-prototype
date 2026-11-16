@@ -398,6 +398,38 @@ img.icon { display: block; flex: none; }
 .setting-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .setting-title { display: flex; align-items: center; gap: 4px; }
 .hairline { height: 1px; background: var(--line); margin: 0 12px; }
+.promo-packages {
+  display: flex;
+  gap: 8px;
+  padding: 0 12px 4px;
+}
+.promo-package {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  border: 1px solid #e4e2ec;
+  border-radius: 12px;
+  background: #fff;
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.promo-package.selected { border-color: var(--accent); }
+.promo-package b {
+  font-size: 16px;
+  font-weight: 550;
+  letter-spacing: -0.32px;
+  line-height: 1.25;
+}
+.promo-package .sub {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.promo-amount { padding-top: 8px; }
 
 .field { display: flex; flex-direction: column; padding: 4px 0; }
 .field-label {
