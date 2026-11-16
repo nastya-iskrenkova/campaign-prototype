@@ -30,7 +30,7 @@ type SheetKind = "categories" | "rates" | "topup" | "help" | null;
 type PayModel = "cpc" | "cpm";
 type RateTarget = "search" | "cpm";
 
-const PASSWORD = "e5HRA0v4vt";
+const PASSWORD = import.meta.env.VITE_PASSWORD ?? "";
 const UNLOCK_KEY = "campaign-unlocked";
 
 const initial = {

@@ -23,22 +23,24 @@ export const categories = [
   "Серьги",
 ];
 
+const asset = (file: string) => `${import.meta.env.BASE_URL}assets/${file}`;
+
 export const products: Product[] = [
-  { id: "toy-1", name: toyName, sku: "1503278140", brand: "[Название]", category: "Игрушки", image: "/assets/toy-1.jpg" },
-  { id: "toy-2", name: toyName, sku: "1503278141", brand: "[Название]", category: "Игрушки", image: "/assets/toy-2.jpg" },
-  { id: "toy-3", name: toyName, sku: "1503278142", brand: "[Название]", category: "Игрушки", image: "/assets/toy-3.jpg" },
-  { id: "toy-4", name: toyName, sku: "1503278143", brand: "[Название]", category: "Игрушки", image: "/assets/toy-4.jpg" },
-  { id: "toy-5", name: toyName, sku: "1503278144", brand: "[Название]", category: "Игрушки", image: "/assets/toy-5.jpg" },
-  { id: "pants-1", name: "Брюки прямые хлопковые", sku: "2201844001", brand: "O'STIN", category: "Брюки", image: "/assets/pants-1.jpg" },
-  { id: "pants-2", name: "Брюки зауженные серые", sku: "2201844008", brand: "Befree", category: "Брюки", image: "/assets/pants-2.jpg" },
-  { id: "skirt-1", name: "Юбка миди плиссе", sku: "3301002211", brand: "Zarika", category: "Юбки", image: "/assets/skirt-1.jpg" },
-  { id: "boots-1", name: "Сапоги кожаные высокие", sku: "4412900188", brand: "Respect", category: "Сапоги", image: "/assets/boots-1.jpg" },
-  { id: "glasses-1", name: "Солнцезащитные очки авиаторы", sku: "5500128834", brand: "Polaroid", category: "Солнцезащитные очки", image: "/assets/glasses-1.jpg" },
-  { id: "music-1", name: "Игрушечное пианино деревянное", sku: "1600442190", brand: "Janod", category: "Игрушечные музыкальные инструменты", image: "/assets/music-1.jpg" },
-  { id: "jacket-1", name: "Пиджак оверсайз льняной", sku: "7703310042", brand: "Lime", category: "Пиджаки", image: "/assets/jacket-1.jpg" },
-  { id: "shorts-1", name: "Шорты джинсовые", sku: "8802201176", brand: "Colin's", category: "Шорты", image: "/assets/shorts-1.jpg" },
-  { id: "sweat-1", name: "Свитшот с вышивкой", sku: "9901183340", brand: "Mark Formelle", category: "Свитшоты", image: "/assets/sweat-1.jpg" },
-  { id: "ear-1", name: "Серьги кольца золотистые", sku: "1207786503", brand: "Sokolov", category: "Серьги", image: "/assets/ear-1.jpg" },
+  { id: "toy-1", name: toyName, sku: "1503278140", brand: "[Название]", category: "Игрушки", image: asset("toy-1.jpg") },
+  { id: "toy-2", name: toyName, sku: "1503278141", brand: "[Название]", category: "Игрушки", image: asset("toy-2.jpg") },
+  { id: "toy-3", name: toyName, sku: "1503278142", brand: "[Название]", category: "Игрушки", image: asset("toy-3.jpg") },
+  { id: "toy-4", name: toyName, sku: "1503278143", brand: "[Название]", category: "Игрушки", image: asset("toy-4.jpg") },
+  { id: "toy-5", name: toyName, sku: "1503278144", brand: "[Название]", category: "Игрушки", image: asset("toy-5.jpg") },
+  { id: "pants-1", name: "Брюки прямые хлопковые", sku: "2201844001", brand: "O'STIN", category: "Брюки", image: asset("pants-1.jpg") },
+  { id: "pants-2", name: "Брюки зауженные серые", sku: "2201844008", brand: "Befree", category: "Брюки", image: asset("pants-2.jpg") },
+  { id: "skirt-1", name: "Юбка миди плиссе", sku: "3301002211", brand: "Zarika", category: "Юбки", image: asset("skirt-1.jpg") },
+  { id: "boots-1", name: "Сапоги кожаные высокие", sku: "4412900188", brand: "Respect", category: "Сапоги", image: asset("boots-1.jpg") },
+  { id: "glasses-1", name: "Солнцезащитные очки авиаторы", sku: "5500128834", brand: "Polaroid", category: "Солнцезащитные очки", image: asset("glasses-1.jpg") },
+  { id: "music-1", name: "Игрушечное пианино деревянное", sku: "1600442190", brand: "Janod", category: "Игрушечные музыкальные инструменты", image: asset("music-1.jpg") },
+  { id: "jacket-1", name: "Пиджак оверсайз льняной", sku: "7703310042", brand: "Lime", category: "Пиджаки", image: asset("jacket-1.jpg") },
+  { id: "shorts-1", name: "Шорты джинсовые", sku: "8802201176", brand: "Colin's", category: "Шорты", image: asset("shorts-1.jpg") },
+  { id: "sweat-1", name: "Свитшот с вышивкой", sku: "9901183340", brand: "Mark Formelle", category: "Свитшоты", image: asset("sweat-1.jpg") },
+  { id: "ear-1", name: "Серьги кольца золотистые", sku: "1207786503", brand: "Sokolov", category: "Серьги", image: asset("ear-1.jpg") },
 ];
 
 export function formatMoney(value: number) {

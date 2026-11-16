@@ -21,7 +21,7 @@ export type IconName = keyof typeof iconSize;
 
 export function Icon({ name, alt = "" }: { name: IconName; alt?: string }) {
   const [width, height] = iconSize[name];
-  return <img className="icon" src={`/assets/${name}.svg`} width={width} height={height} alt={alt} />;
+  return <img className="icon" src={`${import.meta.env.BASE_URL}assets/${name}.svg`} width={width} height={height} alt={alt} />;
 }
 
 export function StatusBar() {
