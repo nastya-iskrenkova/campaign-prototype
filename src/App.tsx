@@ -29,8 +29,9 @@ import {
   Stepper,
   Toggle,
 } from "./ui";
+import { HomeScreen, listedCampaigns, placementLabel, type ListedCampaign } from "./home";
 
-type Screen = "fork" | "search" | "category" | "settings" | "bids" | "budget" | "done";
+type Screen = "home" | "fork" | "search" | "category" | "settings" | "bids" | "budget" | "done";
 type SheetKind = "categories" | "rates" | "topup" | "help" | null;
 type PayModel = "cpc" | "cpm";
 type CpmBidMode = "unified" | "manual";
@@ -40,7 +41,7 @@ const PASSWORD = import.meta.env.VITE_PASSWORD ?? "";
 const UNLOCK_KEY = "campaign-unlocked";
 
 const initial = {
-  screen: "fork" as Screen,
+  screen: "home" as Screen,
   cameFrom: "search" as "search" | "category",
   query: "",
   categoryQuery: "",
@@ -74,6 +75,7 @@ const initial = {
 export default function App() {
   const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem(UNLOCK_KEY) === "1");
   const [state, setState] = useState(initial);
+  const [campaigns, setCampaigns] = useState<ListedCampaign[]>(listedCampaigns);
   const [sheet, setSheet] = useState<SheetKind>(null);
   const [help, setHelp] = useState<HelpId>("cpc");
   const [rateTarget, setRateTarget] = useState<RateTarget>("search");
@@ -134,6 +136,23 @@ export default function App() {
     setSheet(null);
   }
 
+  function launch() {
+    setCampaigns((current) => [
+      {
+        key: `created-${current.length}`,
+        id: String(124324300 + current.length),
+        name: state.name.trim() || "Новая кампания",
+        pay: state.model === "cpc" ? "CPC" : "CPM",
+        placement: placementLabel(state),
+        items: 1,
+        balance: state.budget,
+        autoTopup: state.topupOn,
+      },
+      ...current,
+    ]);
+    patch({ screen: "done" });
+  }
+
   const title =
     state.screen === "search"
       ? "Добавление товара"
@@ -170,7 +189,19 @@ export default function App() {
     <div className="stage">
       <div className="phone">
         <StatusBar />
-        <NavBar title={title} onBack={state.screen === "fork" ? undefined : back} />
+        <NavBar
+          title={state.screen === "home" ? "Продвижение" : title}
+          onBack={state.screen === "home" ? () => undefined : state.screen === "fork" ? () => patch({ screen: "home" }) : back}
+        />
+        {state.screen === "home" ? (
+          <HomeScreen
+            campaigns={campaigns}
+            onCreate={() => patch({ screen: "fork" })}
+            onHelp={() => openHelp("balance")}
+            onTopup={() => setSheet("topup")}
+          />
+        ) : (
+        <>
         <div className="scroll">
           {state.screen === "fork" && (
             <>
@@ -678,9 +709,11 @@ export default function App() {
           <PrimaryButton onClick={() => patch({ screen: "budget" })}>Продолжить</PrimaryButton>
         )}
         {!sheet && state.screen === "budget" && (
-          <PrimaryButton disabled={!budgetValid || !promoReady} onClick={() => patch({ screen: "done" })}>Запустить кампанию</PrimaryButton>
+          <PrimaryButton disabled={!budgetValid || !promoReady} onClick={launch}>Запустить кампанию</PrimaryButton>
         )}
         {!sheet && state.screen === "done" && <PrimaryButton onClick={reset}>Создать ещё</PrimaryButton>}
+        </>
+        )}
 
         {sheet === "categories" && (
           <Sheet title="Категория товара" tall onClose={() => setSheet(null)}>
